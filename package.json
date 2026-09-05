@@ -1,0 +1,31 @@
+{
+  "name": "miapif",
+  "version": "1.0.0",
+  "description": "API REST para gestión de usuarios con autenticación",
+  "keywords": [
+    "tomate"
+  ],
+  "homepage": "https://github.com/Ferbarotz/APIs_REST#readme",
+  "bugs": {
+    "url": "https://github.com/Ferbarotz/APIs_REST/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ferbarotz/APIs_REST.git"
+  },
+  "license": "ISC",
+  "author": "Fernando Barrera",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
