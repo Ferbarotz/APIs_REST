@@ -1,3 +1,25 @@
+from flask import Blueprint, request, jsonify
+from models import db, User
+
+api = Blueprint("api", __name__)
+
+# GET /api/usuarios  →  listar todos (SIN id)
+@api.route('/usuarios', methods=['GET'])
+def listar_usuarios():
+    usuarios = User.query.all()
+    return jsonify([u.serialize() for u in usuarios]), 200
+
+
+# GET /api/usuarios/<id>  →  ver uno solo
+@api.route('/usuarios/<int:id>', methods=['GET'])
+def obtener_usuario(id):
+    usuario = db.session.get(User, id)
+    if not usuario:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+    return jsonify(usuario.serialize()), 200
+
+
+# POST /api/usuarios  →  crear
 @api.route('/usuarios', methods=['POST'])
 def create_usuario():
     body = request.get_json()
@@ -30,3 +52,47 @@ def create_usuario():
         "mensaje": "Usuario creado correctamente",
         "usuario": nuevo_usuario.serialize()
     }), 201
+
+
+# PUT /api/usuarios/<id>  →  actualizar
+@api.route('/usuarios/<int:id>', methods=['PUT'])
+def actualizar_usuario(id):
+    usuario = db.session.get(User, id)
+    if not usuario:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    body = request.get_json()
+    if body is None:
+        return jsonify({"error": "El cuerpo de la solicitud no puede estar vacío"}), 400
+
+    if 'nombre' in body:
+        usuario.nombre = body['nombre']
+    if 'email' in body:
+        existe = User.query.filter(User.email == body['email'], User.id != id).first()
+        if existe:
+            return jsonify({"error": "Ese email ya está registrado"}), 400
+        usuario.email = body['email']
+    if 'password' in body:
+        usuario.password = body['password']
+    if 'is_active' in body:
+        usuario.is_active = body['is_active']
+
+    db.session.commit()
+
+    return jsonify({
+        "mensaje": "Usuario actualizado correctamente",
+        "usuario": usuario.serialize()
+    }), 200
+
+
+# DELETE /api/usuarios/<id>  →  borrar
+@api.route('/usuarios/<int:id>', methods=['DELETE'])
+def eliminar_usuario(id):
+    usuario = db.session.get(User, id)
+    if not usuario:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    db.session.delete(usuario)
+    db.session.commit()
+
+    return jsonify({"mensaje": "Usuario eliminado correctamente"}), 200
