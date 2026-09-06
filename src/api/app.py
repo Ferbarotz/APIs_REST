@@ -44,6 +44,11 @@ def pagina_ingresar():
     return pagina("ingresar.html")
 
 
+@app.route("/registro")
+def pagina_registro():
+    return pagina("registro.html")
+
+
 # ---- Página del formulario de usuarios ----
 @app.route("/usuarios")
 def pagina_usuarios():

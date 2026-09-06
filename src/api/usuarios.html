@@ -13,7 +13,7 @@
             padding: 24px;
         }
         .contenedor {
-            max-width: 980px;
+            max-width: 900px;
             margin: 0 auto;
             background: white;
             border-radius: 18px;
@@ -47,6 +47,11 @@
             color: transparent;
             font-size: 2rem;
         }
+        .acciones {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
         .boton-volver {
             text-decoration: none;
             border: 1.5px solid #7c3aed;
@@ -55,56 +60,9 @@
             padding: 10px 16px;
             font-weight: 600;
             transition: 0.2s;
+            display: inline-block;
         }
         .boton-volver:hover { background: #f3e8ff; }
-        .bloque {
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 18px;
-        }
-        .bloque h2 {
-            font-size: 1.2rem;
-            color: #1f2937;
-            margin-bottom: 12px;
-        }
-        .campo { margin-bottom: 12px; }
-        .campo label {
-            display: block;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #475569;
-            margin-bottom: 6px;
-        }
-        .campo input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 0.95rem;
-        }
-        .campo input:focus {
-            outline: none;
-            border-color: #7c3aed;
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
-        }
-        .boton-crear {
-            margin-top: 8px;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 18px;
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-            background: linear-gradient(90deg, #2563eb, #7c3aed);
-        }
-        .exito, .error {
-            margin-top: 10px;
-            font-weight: 600;
-            display: none;
-        }
-        .exito { color: #059669; }
-        .error { color: #dc2626; }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -133,56 +91,31 @@
                 <img src="/static/logoFB.png" alt="Logo FB" class="logo">
                 <h1>Lista de usuarios</h1>
             </div>
-            <a href="/" class="boton-volver">← Volver al inicio</a>
+            <div class="acciones">
+                <a href="/api/usuarios" class="boton-volver">Ver datos (JSON)</a>
+                <a href="/" class="boton-volver">← Volver al inicio</a>
+            </div>
         </div>
 
-        <div class="bloque">
-            <h2>Añadir nuevo usuario</h2>
-            <form id="formulario-usuario">
-                <div class="campo">
-                    <label for="nombre">Nombre</label>
-                    <input type="text" id="nombre" placeholder="Ejemplo: Ana Pérez" required>
-                </div>
-                <div class="campo">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="usuario@ejemplo.com" required>
-                </div>
-                <div class="campo">
-                    <label for="password">Contraseña</label>
-                    <input type="password" id="password" placeholder="Escribe una contraseña segura" required>
-                </div>
-                <button type="submit" class="boton-crear">Crear usuario</button>
-            </form>
-            <p id="mensaje-exito" class="exito"></p>
-            <p id="mensaje-error" class="error"></p>
-        </div>
-
-        <div class="bloque">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Email</th>
-                        <th>Foto</th>
-                    </tr>
-                </thead>
-                <tbody id="cuerpo-tabla"></tbody>
-            </table>
-            <p id="mensaje-vacio">Cargando usuarios…</p>
-        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Foto</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-tabla"></tbody>
+        </table>
+        <p id="mensaje-vacio">Cargando usuarios…</p>
     </div>
 
     <script>
         const cuerpoTabla = document.getElementById('cuerpo-tabla');
         const mensajeVacio = document.getElementById('mensaje-vacio');
-        const formulario = document.getElementById('formulario-usuario');
-        const mensajeExito = document.getElementById('mensaje-exito');
-        const mensajeError = document.getElementById('mensaje-error');
 
         async function cargarUsuarios() {
-            mensajeExito.style.display = 'none';
-            mensajeError.style.display = 'none';
             mensajeVacio.style.display = 'block';
             mensajeVacio.textContent = 'Cargando usuarios…';
             cuerpoTabla.innerHTML = '';
@@ -192,7 +125,7 @@
                 const usuarios = await respuesta.json();
 
                 if (!Array.isArray(usuarios) || usuarios.length === 0) {
-                    mensajeVacio.textContent = 'No hay usuarios todavía. Usa el formulario para crear el primero.';
+                    mensajeVacio.textContent = 'No hay usuarios todavía. Créalos desde el formulario de registro.';
                     return;
                 }
 
@@ -213,42 +146,6 @@
                 mensajeVacio.textContent = 'No se pudo cargar la lista de usuarios.';
             }
         }
-
-        formulario.addEventListener('submit', async (evento) => {
-            evento.preventDefault();
-
-            mensajeExito.style.display = 'none';
-            mensajeError.style.display = 'none';
-
-            const datos = {
-                nombre: document.getElementById('nombre').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                password: document.getElementById('password').value
-            };
-
-            try {
-                const respuesta = await fetch('/api/usuarios', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datos)
-                });
-
-                const resultado = await respuesta.json();
-
-                if (respuesta.ok) {
-                    mensajeExito.textContent = resultado.mensaje;
-                    mensajeExito.style.display = 'block';
-                    formulario.reset();
-                    await cargarUsuarios();
-                } else {
-                    mensajeError.textContent = resultado.error;
-                    mensajeError.style.display = 'block';
-                }
-            } catch (error) {
-                mensajeError.textContent = 'Ocurrió un error al crear el usuario.';
-                mensajeError.style.display = 'block';
-            }
-        });
 
         cargarUsuarios();
     </script>
