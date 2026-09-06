@@ -3,7 +3,7 @@ from models import db, User
 
 api = Blueprint("api", __name__)
 
-# GET /api/usuarios  →  listar todos (SIN id)
+# GET /api/usuarios  →  listar todos
 @api.route('/usuarios', methods=['GET'])
 def listar_usuarios():
     usuarios = User.query.all()
