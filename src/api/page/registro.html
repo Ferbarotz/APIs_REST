@@ -158,7 +158,7 @@
                 const resultado = await respuesta.json();
 
                 if (respuesta.ok) {
-                    mensajeExito.innerHTML = '¡Usuario creado correctamente! <a href="/usuarios" class="enlace-lista">Ver lista de usuarios</a>';
+                    mensajeExito.textContent = '¡Usuario creado correctamente!';
                     mensajeExito.style.display = 'block';
                     formulario.reset();
                 } else {
