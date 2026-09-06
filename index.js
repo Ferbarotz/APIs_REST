@@ -14,3 +14,13 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
 });
+
+// Sirve la página html de usuarios
+app.get('/usuarios', (req, res) => {
+  res.sendFile(__dirname + '/usuarios.html');
+});
+
+// API: datos en JSON que consume la página
+app.get('/api/usuarios', (req, res) => {
+  res.json(usuarios);
+});
