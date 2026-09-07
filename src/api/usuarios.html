@@ -45,12 +45,38 @@
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            font-size: 2rem;
+            font-size: 2.5rem;
+        }
+        .foto-perfil {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px dashed #cbd5e1;
+            flex-shrink: 0;
         }
         .acciones {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+        }
+        .boton-foto {
+            border: 1.5px solid #2563eb;
+            color: #2563eb;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            background: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .boton-foto:hover { background: #eff6ff; }
+        .mensaje-foto {
+            margin-bottom: 14px;
+            color: #2563eb;
+            font-weight: 600;
+            display: none;
         }
         .boton-volver {
             text-decoration: none;
@@ -101,13 +127,16 @@
         <div class="cabecera">
             <div class="cabecera-izquierda">
                 <img src="/static/logoFB.png" alt="Logo FB" class="logo">
-                <h1>Lista de usuarios</h1>
+                <h1>APIs</h1>
+                <div class="foto-perfil" title="Foto del usuario"></div>
             </div>
             <div class="acciones">
+                <button type="button" id="boton-cambiar-foto" class="boton-foto">Cambiar foto</button>
                 <a href="/api/usuarios" class="boton-volver">Ver datos (JSON)</a>
                 <a href="/logout" class="boton-salir">Salir</a>
             </div>
         </div>
+        <p id="mensaje-foto" class="mensaje-foto"></p>
 
         <table>
             <thead>
@@ -160,6 +189,12 @@
         }
 
         cargarUsuarios();
+
+        const mensajeFoto = document.getElementById('mensaje-foto');
+        document.getElementById('boton-cambiar-foto').addEventListener('click', () => {
+            mensajeFoto.textContent = '📷 La subida de fotos estará lista en el siguiente paso.';
+            mensajeFoto.style.display = 'block';
+        });
     </script>
 </body>
 </html>
