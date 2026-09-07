@@ -62,6 +62,7 @@
             background: #ffffff;
             border: 2px dashed #cbd5e1;
             flex-shrink: 0;
+            overflow: hidden;
         }
         .acciones {
             display: flex;
@@ -143,6 +144,7 @@
             </div>
             <div class="acciones">
                 <button type="button" id="boton-cambiar-foto" class="boton-foto">Cambiar foto</button>
+                <input type="file" id="input-foto" accept="image/*" style="display:none">
                 <a href="/api/usuarios" class="boton-volver">Ver datos (JSON)</a>
                 <a href="/logout" class="boton-salir">Salir</a>
             </div>
@@ -166,6 +168,9 @@
     <script>
         const cuerpoTabla = document.getElementById('cuerpo-tabla');
         const mensajeVacio = document.getElementById('mensaje-vacio');
+        const inputFoto = document.getElementById('input-foto');
+        const fotoPerfil = document.querySelector('.foto-perfil');
+        const mensajeFoto = document.getElementById('mensaje-foto');
 
         async function cargarUsuarios() {
             mensajeVacio.style.display = 'block';
@@ -189,7 +194,7 @@
                         <td>${u.id}</td>
                         <td>${u.nombre}</td>
                         <td>${u.email}</td>
-                        <td>${u.foto || '—'}</td>
+                        <td>${u.foto ? '<img src="' + u.foto + '" alt="Foto" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">' : '—'}</td>
                     `;
                     cuerpoTabla.appendChild(fila);
                 });
@@ -199,13 +204,49 @@
             }
         }
 
-        cargarUsuarios();
+        // función para pintar la foto del usuario logueado en el círculo
+        async function cargarPerfil() {
+            try {
+                const respuesta = await fetch('/api/yo');
+                if (respuesta.ok) {
+                    const usuario = await respuesta.json();
+                    if (usuario.foto) {
+                        fotoPerfil.innerHTML = '<img src="' + usuario.foto + '" alt="Foto de ' + usuario.nombre + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">';
+                    }
+                }
+            } catch (error) { /* si no hay sesión no pasa nada */ }
+        }
 
-        const mensajeFoto = document.getElementById('mensaje-foto');
-        document.getElementById('boton-cambiar-foto').addEventListener('click', () => {
-            mensajeFoto.textContent = '📷 La subida de fotos estará lista en el siguiente paso.';
+        document.getElementById('boton-cambiar-foto').addEventListener('click', () => inputFoto.click());
+        inputFoto.addEventListener('change', async () => {
+            const archivo = inputFoto.files[0];
+            if (!archivo) return;
+            const datos = new FormData();
+            datos.append('foto', archivo);
             mensajeFoto.style.display = 'block';
+            mensajeFoto.style.color = '#2563eb';
+            mensajeFoto.textContent = 'Subiendo foto…';
+            try {
+                const respuesta = await fetch('/api/foto', { method: 'POST', body: datos });
+                const resultado = await respuesta.json();
+                if (respuesta.ok) {
+                    mensajeFoto.style.color = '#059669';
+                    mensajeFoto.textContent = '✅ ' + resultado.mensaje;
+                    await cargarPerfil();
+                    await cargarUsuarios();
+                } else {
+                    mensajeFoto.style.color = '#dc2626';
+                    mensajeFoto.textContent = resultado.error;
+                }
+            } catch (error) {
+                mensajeFoto.style.color = '#dc2626';
+                mensajeFoto.textContent = 'No se pudo subir la foto.';
+            }
+            inputFoto.value = '';
         });
+
+        cargarUsuarios();
+        cargarPerfil();
     </script>
 </body>
 </html>

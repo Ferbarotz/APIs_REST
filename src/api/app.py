@@ -1,5 +1,5 @@
 import os
-from flask import Flask, send_file, redirect, session
+from flask import Flask, send_file, send_from_directory, redirect, session
 from models import db, User
 from routes import api
 
@@ -65,6 +65,11 @@ def pagina_usuarios():
 def logout():
     session.clear()
     return redirect("/")
+
+
+@app.route("/uploads/<path:nombre>")
+def archivos_subidos(nombre):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], nombre)
 
 
 # --- Crear las tablas la primera vez ---

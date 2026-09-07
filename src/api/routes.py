@@ -1,7 +1,19 @@
-from flask import Blueprint, request, jsonify, session
+import os
+from flask import Blueprint, request, jsonify, session, current_app
+from werkzeug.utils import secure_filename
 from models import db, User
 
 api = Blueprint("api", __name__)
+
+EXTENSIONES_PERMITIDAS = {"png", "jpg", "jpeg", "gif"}
+
+
+def _extension_permitida(nombre_archivo):
+    return (
+        "." in nombre_archivo
+        and nombre_archivo.rsplit(".", 1)[1].lower() in EXTENSIONES_PERMITIDAS
+    )
+
 
 # GET /api/usuarios  →  listar todos
 @api.route('/usuarios', methods=['GET'])
@@ -117,3 +129,52 @@ def eliminar_usuario(id):
     db.session.commit()
 
     return jsonify({"mensaje": "Usuario eliminado correctamente"}), 200
+
+
+# GET /api/yo  →  ver usuario logueado
+@api.route('/yo', methods=['GET'])
+def usuario_logueado():
+    if "usuario_id" not in session:
+        return jsonify({"error": "No has iniciado sesión"}), 401
+
+    usuario = db.session.get(User, session['usuario_id'])
+    if not usuario:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    return jsonify(usuario.serialize()), 200
+
+
+# POST /api/foto  →  subir foto del usuario logueado
+@api.route('/foto', methods=['POST'])
+def subir_foto_usuario():
+    if "usuario_id" not in session:
+        return jsonify({"error": "Debes iniciar sesión"}), 401
+
+    usuario = db.session.get(User, session['usuario_id'])
+    if not usuario:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    if 'foto' not in request.files:
+        return jsonify({"error": "No se recibió ningún archivo"}), 400
+
+    archivo = request.files['foto']
+
+    if archivo.filename == '':
+        return jsonify({"error": "No elegiste ningún archivo"}), 400
+
+    if not _extension_permitida(archivo.filename):
+        return jsonify({"error": "Formato no permitido. Usa png, jpg, jpeg o gif"}), 400
+
+    nombre_seguro = secure_filename(archivo.filename)
+    nombre_guardado = f"usuario_{usuario.id}_{nombre_seguro}"
+    ruta = os.path.join(current_app.config['UPLOAD_FOLDER'], nombre_guardado)
+
+    archivo.save(ruta)
+
+    usuario.foto = f"/uploads/{nombre_guardado}"
+    db.session.commit()
+
+    return jsonify({
+        "mensaje": "Foto actualizada correctamente",
+        "usuario": usuario.serialize()
+    }), 200
