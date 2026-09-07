@@ -12,22 +12,6 @@
             background: linear-gradient(135deg, #1e3a8a 0%, #6d28d9 50%, #d946ef 100%);
             padding: 24px;
         }
-        .contenedor {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 18px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
-            padding: 28px;
-        }
-        .cabecera {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
         .cabecera-portada {
             display: flex;
             align-items: center;
@@ -50,42 +34,35 @@
             letter-spacing: 1px;
             margin: 0;
         }
-        .cabecera-izquierda {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .contenedor {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            padding: 28px;
         }
-        .foto-perfil {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: #ffffff;
-            border: 2px dashed #cbd5e1;
-            flex-shrink: 0;
-            overflow: hidden;
+        .subtitulo-admin {
+            font-size: 1.4rem;
+            margin-bottom: 14px;
+            background: linear-gradient(90deg, #1e3a8a, #7c3aed, #db2777);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+        .cabecera {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .acciones {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-        }
-        .boton-foto {
-            border: 1.5px solid #2563eb;
-            color: #2563eb;
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            background: white;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .boton-foto:hover { background: #eff6ff; }
-        .mensaje-foto {
-            margin-bottom: 14px;
-            color: #2563eb;
-            font-weight: 600;
-            display: none;
         }
         .boton-volver {
             text-decoration: none;
@@ -138,18 +115,15 @@
     </header>
 
     <div class="contenedor">
+        <h2 class="subtitulo-admin">Usuarios registrados</h2>
+
         <div class="cabecera">
-            <div class="cabecera-izquierda">
-                <div class="foto-perfil" title="Foto del usuario"></div>
-            </div>
             <div class="acciones">
-                <button type="button" id="boton-cambiar-foto" class="boton-foto">Cambiar foto</button>
-                <input type="file" id="input-foto" accept="image/*" style="display:none">
+                <a href="/mi-cuenta" class="boton-volver">Mi cuenta</a>
                 <a href="/api/usuarios" class="boton-volver">Ver datos (JSON)</a>
                 <a href="/logout" class="boton-salir">Salir</a>
             </div>
         </div>
-        <p id="mensaje-foto" class="mensaje-foto"></p>
 
         <table>
             <thead>
@@ -168,9 +142,6 @@
     <script>
         const cuerpoTabla = document.getElementById('cuerpo-tabla');
         const mensajeVacio = document.getElementById('mensaje-vacio');
-        const inputFoto = document.getElementById('input-foto');
-        const fotoPerfil = document.querySelector('.foto-perfil');
-        const mensajeFoto = document.getElementById('mensaje-foto');
 
         async function cargarUsuarios() {
             mensajeVacio.style.display = 'block';
@@ -204,49 +175,7 @@
             }
         }
 
-        // función para pintar la foto del usuario logueado en el círculo
-        async function cargarPerfil() {
-            try {
-                const respuesta = await fetch('/api/yo');
-                if (respuesta.ok) {
-                    const usuario = await respuesta.json();
-                    if (usuario.foto) {
-                        fotoPerfil.innerHTML = '<img src="' + usuario.foto + '" alt="Foto de ' + usuario.nombre + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">';
-                    }
-                }
-            } catch (error) { /* si no hay sesión no pasa nada */ }
-        }
-
-        document.getElementById('boton-cambiar-foto').addEventListener('click', () => inputFoto.click());
-        inputFoto.addEventListener('change', async () => {
-            const archivo = inputFoto.files[0];
-            if (!archivo) return;
-            const datos = new FormData();
-            datos.append('foto', archivo);
-            mensajeFoto.style.display = 'block';
-            mensajeFoto.style.color = '#2563eb';
-            mensajeFoto.textContent = 'Subiendo foto…';
-            try {
-                const respuesta = await fetch('/api/foto', { method: 'POST', body: datos });
-                const resultado = await respuesta.json();
-                if (respuesta.ok) {
-                    mensajeFoto.style.color = '#059669';
-                    mensajeFoto.textContent = '✅ ' + resultado.mensaje;
-                    await cargarPerfil();
-                    await cargarUsuarios();
-                } else {
-                    mensajeFoto.style.color = '#dc2626';
-                    mensajeFoto.textContent = resultado.error;
-                }
-            } catch (error) {
-                mensajeFoto.style.color = '#dc2626';
-                mensajeFoto.textContent = 'No se pudo subir la foto.';
-            }
-            inputFoto.value = '';
-        });
-
         cargarUsuarios();
-        cargarPerfil();
     </script>
 </body>
 </html>

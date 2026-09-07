@@ -7,6 +7,12 @@ api = Blueprint("api", __name__)
 
 EXTENSIONES_PERMITIDAS = {"png", "jpg", "jpeg", "gif"}
 
+# ============================================================
+# SOLO estos emails pueden ver el listado de usuarios (admin)
+# En otro proyecto, cambia esta línea por tu propio email
+# ============================================================
+ADMIN_EMAILS = {"ferbarotz23@gmail.com"}
+
 
 def _extension_permitida(nombre_archivo):
     return (
@@ -15,9 +21,16 @@ def _extension_permitida(nombre_archivo):
     )
 
 
+def _es_admin():
+    """True solo si hay sesión iniciada y el email es de un administrador."""
+    return "usuario_id" in session and session.get("usuario_email") in ADMIN_EMAILS
+
+
 # GET /api/usuarios  →  listar todos
 @api.route('/usuarios', methods=['GET'])
 def listar_usuarios():
+    if not _es_admin():
+        return jsonify({"error": "No tienes permiso para ver esta información"}), 403
     usuarios = User.query.all()
     return jsonify([u.serialize() for u in usuarios]), 200
 
@@ -25,6 +38,8 @@ def listar_usuarios():
 # GET /api/usuarios/<id>  →  ver uno solo
 @api.route('/usuarios/<int:id>', methods=['GET'])
 def obtener_usuario(id):
+    if not _es_admin():
+        return jsonify({"error": "No tienes permiso para ver esta información"}), 403
     usuario = db.session.get(User, id)
     if not usuario:
         return jsonify({"error": "Usuario no encontrado"}), 404
@@ -99,6 +114,7 @@ def login_usuario():
 
     session['usuario_id'] = usuario.id
     session['usuario_nombre'] = usuario.nombre
+    session['usuario_email'] = usuario.email
 
     return jsonify({
         "mensaje": "Inicio de sesión exitoso",
@@ -109,6 +125,8 @@ def login_usuario():
 # PUT /api/usuarios/<id>  →  actualizar
 @api.route('/usuarios/<int:id>', methods=['PUT'])
 def actualizar_usuario(id):
+    if not _es_admin():
+        return jsonify({"error": "No tienes permiso para ver esta información"}), 403
     usuario = db.session.get(User, id)
     if not usuario:
         return jsonify({"error": "Usuario no encontrado"}), 404
@@ -140,6 +158,8 @@ def actualizar_usuario(id):
 # DELETE /api/usuarios/<id>  →  borrar
 @api.route('/usuarios/<int:id>', methods=['DELETE'])
 def eliminar_usuario(id):
+    if not _es_admin():
+        return jsonify({"error": "No tienes permiso para ver esta información"}), 403
     usuario = db.session.get(User, id)
     if not usuario:
         return jsonify({"error": "Usuario no encontrado"}), 404
@@ -160,7 +180,9 @@ def usuario_logueado():
     if not usuario:
         return jsonify({"error": "Usuario no encontrado"}), 404
 
-    return jsonify(usuario.serialize()), 200
+    usuario_data = usuario.serialize()
+    usuario_data["admin"] = _es_admin()
+    return jsonify(usuario_data), 200
 
 
 # POST /api/foto  →  subir foto del usuario logueado

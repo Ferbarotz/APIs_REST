@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi cuenta - APIs</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3a8a 0%, #6d28d9 50%, #d946ef 100%);
+            padding: 24px;
+        }
+        .cabecera-portada {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 34px 0 24px;
+        }
+        .logo-portada {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.45);
+        }
+        .titulo-portada {
+            color: white;
+            font-size: 4rem;
+            font-weight: 800;
+            text-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+            letter-spacing: 1px;
+            margin: 0;
+        }
+        .contenedor {
+            max-width: 560px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            padding: 36px 28px;
+            text-align: center;
+        }
+        .circulo-grande {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            background: #f1f5f9;
+            border: 2px dashed #94a3b8;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .circulo-grande span {
+            color: #64748b;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        #nombre-cuenta {
+            font-size: 1.6rem;
+            margin-bottom: 4px;
+            background: linear-gradient(90deg, #1e3a8a, #7c3aed, #db2777);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        #email-cuenta {
+            color: #64748b;
+            margin-bottom: 22px;
+            font-size: 0.95rem;
+        }
+        .mensaje {
+            color: #2563eb;
+            display: none;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .acciones {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .boton-foto {
+            border: 1.5px solid #2563eb;
+            color: #2563eb;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            background: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .boton-foto:hover { background: #eff6ff; }
+        .boton-admin {
+            text-decoration: none;
+            border: 1.5px solid #7c3aed;
+            color: #7c3aed;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+            transition: 0.2s;
+            display: none;
+        }
+        .boton-admin:hover { background: #f3e8ff; }
+        .boton-salir {
+            text-decoration: none;
+            border: 1.5px solid #dc2626;
+            color: #dc2626;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+            transition: 0.2s;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .boton-salir:hover { background: #fef2f2; }
+    </style>
+</head>
+<body>
+    <header class="cabecera-portada">
+        <img src="/static/logoFB.png" alt="Logo FB" class="logo-portada">
+        <h1 class="titulo-portada">APIs</h1>
+    </header>
+
+    <div class="contenedor">
+        <div id="foto-perfil-cuenta" class="circulo-grande">
+            <span>Sin foto</span>
+        </div>
+
+        <h2 id="nombre-cuenta">Mi cuenta</h2>
+        <p id="email-cuenta">Cargando...</p>
+
+        <p id="mensaje-foto" class="mensaje"></p>
+
+        <input type="file" id="input-foto-cuenta" accept="image/*" style="display:none">
+
+        <div class="acciones">
+            <button id="boton-cambiar-foto" class="boton-foto">Cambiar foto</button>
+            <a id="enlace-admin" class="boton-admin" href="/usuarios">Ver usuarios registrados</a>
+            <a class="boton-salir" href="/logout">Salir</a>
+        </div>
+    </div>
+
+    <script>
+        const fotoPerfil = document.getElementById('foto-perfil-cuenta');
+        const nombreCuenta = document.getElementById('nombre-cuenta');
+        const emailCuenta = document.getElementById('email-cuenta');
+        const enlaceAdmin = document.getElementById('enlace-admin');
+        const inputFoto = document.getElementById('input-foto-cuenta');
+        const mensajeFoto = document.getElementById('mensaje-foto');
+
+        // Carga los datos del usuario que inició sesión y pinta su perfil
+        async function cargarMiCuenta() {
+            try {
+                const res = await fetch('/api/yo');
+                if (res.status === 401) { window.location.href = '/ingresar'; return; }
+                const usuario = await res.json();
+                nombreCuenta.textContent = usuario.nombre;
+                emailCuenta.textContent = usuario.email;
+                if (usuario.foto) {
+                    fotoPerfil.innerHTML = '<img src="' + usuario.foto + '" alt="Foto de ' + usuario.nombre + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">';
+                } else {
+                    fotoPerfil.innerHTML = '<span>Sin foto</span>';
+                }
+                if (usuario.admin) { enlaceAdmin.style.display = 'inline-block'; }
+            } catch (error) {
+                window.location.href = '/ingresar';
+            }
+        }
+
+        // Abre el selector de archivos al pulsar el botón cambiar foto
+        document.getElementById('boton-cambiar-foto').addEventListener('click', () => inputFoto.click());
+
+        // Sube la foto seleccionada y refresca los datos del perfil
+        inputFoto.addEventListener('change', async () => {
+            const archivo = inputFoto.files[0];
+            if (!archivo) return;
+            const datos = new FormData();
+            datos.append('foto', archivo);
+            mensajeFoto.style.color = '#2563eb';
+            mensajeFoto.textContent = 'Subiendo foto…';
+            mensajeFoto.style.display = 'block';
+            try {
+                const res = await fetch('/api/foto', { method: 'POST', body: datos });
+                const resultado = await res.json();
+                if (res.ok) {
+                    mensajeFoto.style.color = '#059669';
+                    mensajeFoto.textContent = '✅ ' + resultado.mensaje;
+                    await cargarMiCuenta();
+                } else {
+                    mensajeFoto.style.color = '#dc2626';
+                    mensajeFoto.textContent = resultado.error;
+                }
+            } catch (error) {
+                mensajeFoto.style.color = '#dc2626';
+                mensajeFoto.textContent = 'No se pudo subir la foto.';
+            }
+            inputFoto.value = '';
+        });
+
+        cargarMiCuenta();
+    </script>
+</body>
+</html>

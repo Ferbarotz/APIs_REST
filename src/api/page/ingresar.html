@@ -135,7 +135,7 @@
                 const resultado = await res.json();
 
                 if (res.ok) {
-                    window.location.href = '/usuarios';
+                    window.location.href = '/mi-cuenta';
                 } else {
                     mensaje.textContent = resultado.error || 'No se pudo iniciar sesión';
                     mensaje.style.display = 'block';

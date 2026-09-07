@@ -1,7 +1,7 @@
 import os
 from flask import Flask, send_file, send_from_directory, redirect, session
 from models import db, User
-from routes import api
+from routes import api, ADMIN_EMAILS
 
 app = Flask(__name__)
 
@@ -56,8 +56,17 @@ def pagina_registro():
 def pagina_usuarios():
     if "usuario_id" not in session:
         return redirect("/ingresar")
+    if session.get("usuario_email") not in ADMIN_EMAILS:
+        return redirect("/mi-cuenta")
     ruta_html = os.path.join(os.path.dirname(os.path.abspath(__file__)), "usuarios.html")
     return send_file(ruta_html)
+
+
+@app.route("/mi-cuenta")
+def pagina_mi_cuenta():
+    if "usuario_id" not in session:
+        return redirect("/ingresar")
+    return pagina("mi-cuenta.html")
 
 
 # ---- Cerrar sesión ----
