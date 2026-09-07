@@ -34,31 +34,50 @@ def obtener_usuario(id):
 # POST /api/usuarios  →  crear
 @api.route('/usuarios', methods=['POST'])
 def create_usuario():
-    body = request.get_json()
+    body = request.get_json(silent=True)
+    form_data = request.form
 
-    if body is None:
-        return jsonify({"error": "El cuerpo de la solicitud no puede estar vacío"}), 400
-    if 'nombre' not in body:
+    nombre = (body or form_data).get('nombre')
+    email = (body or form_data).get('email')
+    password = (body or form_data).get('password')
+
+    if not nombre:
         return jsonify({"error": "El campo 'nombre' es requerido"}), 400
-    if 'email' not in body:
+    if not email:
         return jsonify({"error": "El campo 'email' es requerido"}), 400
-    if 'password' not in body:
+    if not password:
         return jsonify({"error": "El campo 'password' es requerido"}), 400
 
     # Verificar que el email no exista ya
-    usuario_existente = User.query.filter_by(email=body['email']).first()
+    usuario_existente = User.query.filter_by(email=email).first()
     if usuario_existente:
         return jsonify({"error": "Ese email ya está registrado"}), 400
 
+    archivo = request.files.get('foto')
+    if archivo and archivo.filename != '' and not _extension_permitida(archivo.filename):
+        return jsonify({"error": "Formato no permitido. Usa png, jpg, jpeg o gif"}), 400
+
+    is_active = True
+    if body is not None:
+        is_active = body.get('is_active', True)
+
     nuevo_usuario = User(
-        nombre=body['nombre'],
-        email=body['email'],
-        password=body['password'],
-        is_active=body.get('is_active', True)
+        nombre=nombre,
+        email=email,
+        password=password,
+        is_active=is_active
     )
 
     db.session.add(nuevo_usuario)
     db.session.commit()
+
+    if archivo and archivo.filename != '':
+        nombre_seguro = secure_filename(archivo.filename)
+        nombre_guardado = f"usuario_{nuevo_usuario.id}_{nombre_seguro}"
+        ruta = os.path.join(current_app.config['UPLOAD_FOLDER'], nombre_guardado)
+        archivo.save(ruta)
+        nuevo_usuario.foto = f"/uploads/{nombre_guardado}"
+        db.session.commit()
 
     return jsonify({
         "mensaje": "Usuario creado correctamente",

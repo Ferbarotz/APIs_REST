@@ -58,6 +58,24 @@
             margin-bottom: 8px;
         }
         .subtitulo { color: #64748b; margin-bottom: 25px; font-size: 0.95rem; }
+        .circulo-foto-registro {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            margin: 0 auto 18px;
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            color: #64748b;
+            font-size: 0.8rem;
+            text-align: center;
+            line-height: 1.2;
+            padding: 8px;
+        }
         .campo { text-align: left; margin-bottom: 15px; }
         .campo label {
             display: block; font-size: 0.85rem;
@@ -111,7 +129,12 @@
         <h1>Registrarse</h1>
         <p class="subtitulo">Crea tu cuenta para usar la API</p>
 
+        <div id="circulo-foto-registro" class="circulo-foto-registro">
+            <span>📷<br>Subir foto</span>
+        </div>
+
         <form id="formulario-registro">
+            <input type="file" id="input-foto-registro" accept="image/*" style="display:none">
             <div class="campo">
                 <label for="nombre">Nombre</label>
                 <input type="text" id="nombre" placeholder="Ejemplo: Ana Pérez" required>
@@ -135,6 +158,35 @@
         const formulario = document.getElementById('formulario-registro');
         const mensajeExito = document.getElementById('mensaje-exito');
         const mensajeError = document.getElementById('mensaje-error');
+        const inputFotoRegistro = document.getElementById('input-foto-registro');
+        const fotoPerfilRegistro = document.getElementById('circulo-foto-registro');
+
+        function restaurarCirculoFotoRegistro() {
+            fotoPerfilRegistro.innerHTML = '<span>📷<br>Subir foto</span>';
+        }
+
+        fotoPerfilRegistro.addEventListener('click', () => inputFotoRegistro.click());
+
+        inputFotoRegistro.addEventListener('change', () => {
+            const archivo = inputFotoRegistro.files[0];
+
+            if (!archivo) {
+                restaurarCirculoFotoRegistro();
+                return;
+            }
+
+            if (!archivo.type.startsWith('image/')) {
+                restaurarCirculoFotoRegistro();
+                return;
+            }
+
+            const lector = new FileReader();
+            lector.onload = (evento) => {
+                const resultado = evento.target.result;
+                fotoPerfilRegistro.innerHTML = '<img src="' + resultado + '" alt="Foto de perfil" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">';
+            };
+            lector.readAsDataURL(archivo);
+        });
 
         formulario.addEventListener('submit', async (evento) => {
             evento.preventDefault();
@@ -142,17 +194,20 @@
             mensajeExito.style.display = 'none';
             mensajeError.style.display = 'none';
 
-            const datos = {
-                nombre: document.getElementById('nombre').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                password: document.getElementById('password').value
-            };
+            const datos = new FormData();
+            datos.append('nombre', document.getElementById('nombre').value.trim());
+            datos.append('email', document.getElementById('email').value.trim());
+            datos.append('password', document.getElementById('password').value);
+
+            const archivoSeleccionado = inputFotoRegistro.files[0];
+            if (archivoSeleccionado) {
+                datos.append('foto', archivoSeleccionado);
+            }
 
             try {
                 const respuesta = await fetch('/api/usuarios', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datos)
+                    body: datos
                 });
 
                 const resultado = await respuesta.json();
@@ -161,6 +216,8 @@
                     mensajeExito.textContent = '¡Usuario creado correctamente!';
                     mensajeExito.style.display = 'block';
                     formulario.reset();
+                    inputFotoRegistro.value = '';
+                    restaurarCirculoFotoRegistro();
                 } else {
                     mensajeError.textContent = resultado.error;
                     mensajeError.style.display = 'block';
