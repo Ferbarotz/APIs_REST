@@ -63,6 +63,18 @@
             display: inline-block;
         }
         .boton-volver:hover { background: #f3e8ff; }
+        .boton-salir {
+            text-decoration: none;
+            border: 1.5px solid #dc2626;
+            color: #dc2626;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+            transition: 0.2s;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .boton-salir:hover { background: #fef2f2; }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -93,7 +105,7 @@
             </div>
             <div class="acciones">
                 <a href="/api/usuarios" class="boton-volver">Ver datos (JSON)</a>
-                <a href="/" class="boton-volver">← Volver al inicio</a>
+                <a href="/logout" class="boton-salir">Salir</a>
             </div>
         </div>
 

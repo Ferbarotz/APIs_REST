@@ -51,13 +51,20 @@ def pagina_registro():
     return pagina("registro.html")
 
 
-# ---- Página del formulario de usuarios ----
+# ---- Página de la lista de usuarios (requiere sesión) ----
 @app.route("/usuarios")
 def pagina_usuarios():
     if "usuario_id" not in session:
         return redirect("/ingresar")
     ruta_html = os.path.join(os.path.dirname(os.path.abspath(__file__)), "usuarios.html")
     return send_file(ruta_html)
+
+
+# ---- Cerrar sesión ----
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
 
 
 # --- Crear las tablas la primera vez ---
