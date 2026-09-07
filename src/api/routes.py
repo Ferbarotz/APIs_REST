@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from models import db, User
 
 api = Blueprint("api", __name__)
@@ -52,6 +52,27 @@ def create_usuario():
         "mensaje": "Usuario creado correctamente",
         "usuario": nuevo_usuario.serialize()
     }), 201
+
+
+# POST /api/login  →  iniciar sesión
+@api.route('/login', methods=['POST'])
+def login_usuario():
+    body = request.get_json()
+
+    if body is None or 'email' not in body or 'password' not in body:
+        return jsonify({"error": "Email y contraseña son requeridos"}), 400
+
+    usuario = User.query.filter_by(email=body['email']).first()
+    if not usuario or body['password'] != usuario.password:
+        return jsonify({"error": "Email o contraseña incorrectos"}), 401
+
+    session['usuario_id'] = usuario.id
+    session['usuario_nombre'] = usuario.nombre
+
+    return jsonify({
+        "mensaje": "Inicio de sesión exitoso",
+        "usuario": usuario.serialize()
+    }), 200
 
 
 # PUT /api/usuarios/<id>  →  actualizar

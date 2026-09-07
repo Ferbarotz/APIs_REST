@@ -1,5 +1,5 @@
 import os
-from flask import Flask, send_file
+from flask import Flask, send_file, redirect, session
 from models import db, User
 from routes import api
 
@@ -12,6 +12,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # --- Configuración de subida de archivos ---
 app.config["UPLOAD_FOLDER"] = "uploads"
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # Máximo: 5 MB
+# Clave para firmar las sesiones
+app.config["SECRET_KEY"] = "clave-secreta-de-practica-apifernando"
 
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
@@ -52,6 +54,8 @@ def pagina_registro():
 # ---- Página del formulario de usuarios ----
 @app.route("/usuarios")
 def pagina_usuarios():
+    if "usuario_id" not in session:
+        return redirect("/ingresar")
     ruta_html = os.path.join(os.path.dirname(os.path.abspath(__file__)), "usuarios.html")
     return send_file(ruta_html)
 

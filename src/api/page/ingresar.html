@@ -111,11 +111,39 @@
         <p id="mensaje" class="mensaje"></p>
     </div>
     <script>
-        document.getElementById('formulario-ingreso').addEventListener('submit', (evento) => {
-            evento.preventDefault();
+        const form = document.getElementById('formulario-ingreso');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
             const mensaje = document.getElementById('mensaje');
-            mensaje.textContent = 'La validación de login estará lista en el siguiente paso (con contraseñas cifradas).';
-            mensaje.style.display = 'block';
+            mensaje.style.display = 'none';
+            mensaje.textContent = '';
+
+            const datos = {
+                email: document.getElementById('email').value.trim(),
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                const resultado = await res.json();
+
+                if (res.ok) {
+                    window.location.href = '/usuarios';
+                } else {
+                    mensaje.textContent = resultado.error || 'No se pudo iniciar sesión';
+                    mensaje.style.display = 'block';
+                }
+            } catch (err) {
+                mensaje.textContent = 'Ocurrió un error al iniciar sesión';
+                mensaje.style.display = 'block';
+            }
         });
     </script>
 </body>
