@@ -28,24 +28,32 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
+        .cabecera-portada {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 34px 0 24px;
+        }
+        .logo-portada {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.45);
+        }
+        .titulo-portada {
+            color: white;
+            font-size: 4rem;
+            font-weight: 800;
+            text-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+            letter-spacing: 1px;
+            margin: 0;
+        }
         .cabecera-izquierda {
             display: flex;
             align-items: center;
             gap: 12px;
-        }
-        .logo {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            box-shadow: 0 0 12px rgba(30, 58, 138, 0.35);
-        }
-        h1 {
-            background: linear-gradient(90deg, #1e3a8a, #7c3aed, #db2777);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-size: 2.5rem;
         }
         .foto-perfil {
             width: 64px;
@@ -123,11 +131,14 @@
     </style>
 </head>
 <body>
+    <header class="cabecera-portada">
+        <img src="/static/logoFB.png" alt="Logo FB" class="logo-portada">
+        <h1 class="titulo-portada">APIs</h1>
+    </header>
+
     <div class="contenedor">
         <div class="cabecera">
             <div class="cabecera-izquierda">
-                <img src="/static/logoFB.png" alt="Logo FB" class="logo">
-                <h1>APIs</h1>
                 <div class="foto-perfil" title="Foto del usuario"></div>
             </div>
             <div class="acciones">
