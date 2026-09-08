@@ -4,3 +4,13 @@ __pycache__/
 *.pyc
 
 uploads/
+
+# Node (demo Express)
+node_modules/
+npm-debug.log*
+
+# Python
+.venv/
+venv/
+.env
+*.log

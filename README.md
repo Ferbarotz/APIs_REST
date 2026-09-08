@@ -69,12 +69,13 @@ Explicación rápida:
 
 > Nota: `instance/` y `uploads/` están en `.gitignore`, por eso son locales.
 
-### 🚀 Cómo ejecutarlo
+### 🚀 Cómo ejecutarlo (proyecto principal: Flask)
 
-1. Ir al proyecto:
+1. Clonar y entrar al proyecto (Plan B):
 
 ```bash
-cd /home/ubuntu/github_repos/APIs_REST
+git clone https://github.com/Ferbarotz/APIs_REST
+cd APIs_REST
 ```
 
 2. (Opcional pero recomendado) Crear entorno virtual:
@@ -107,6 +108,30 @@ python app.py
 
 ```text
 http://localhost:5000
+```
+
+> Nota: `index.js` es solo una demo opcional en Express (`npm install && npm start` → `http://localhost:3000`). El proyecto principal reutilizable es el Flask de `src/api/`.
+
+### ⚙️ Configuración para reutilizar (importante)
+
+```bash
+cp .env.example .env
+```
+
+Edita `.env`:
+
+```text
+SECRET_KEY=una-clave-larga-aleatoria
+ADMIN_EMAILS=tu-email@test.com,otro-admin@test.com
+```
+
+Y expórtalas antes de arrancar (o defínelas en tu hosting):
+
+```bash
+export SECRET_KEY="una-clave-larga-aleatoria"
+export ADMIN_EMAILS="tu-email@test.com"
+cd src/api
+python app.py
 ```
 
 ### 🌐 Páginas y flujo
@@ -186,10 +211,14 @@ curl -c /tmp/cookies.txt -X POST http://localhost:5000/api/login \
 
 ### 🔐 Panel de administración
 
-En `src/api/routes.py` está definido:
+En `src/api/routes.py` se lee de entorno (con valor por defecto):
 
 ```python
-ADMIN_EMAILS = {"ferbarotz23@gmail.com"}
+ADMIN_EMAILS = {
+    e.strip().lower()
+    for e in os.environ.get("ADMIN_EMAILS", "ferbarotz23@gmail.com").split(",")
+    if e.strip()
+}
 ```
 
 Qué implica:
@@ -199,8 +228,8 @@ Qué implica:
   - si llama `/api/usuarios` (GET/PUT/DELETE por ID también) → respuesta `403`.
 
 Importante de seguridad actual:
-- La contraseña se guarda en texto plano en la base de datos (`password` sin hash).
-- Es funcional para práctica, pero **no es seguro para producción**.
+- La contraseña se guarda con hash `werkzeug.security` (`scrypt`).
+- Usuarios legacy en texto plano migran a hash automáticamente al hacer login.
 
 ### ♻️ Cómo reutilizarlo en otro proyecto
 
@@ -213,8 +242,8 @@ Pasos recomendados:
 1. Copia el módulo (`src/api`) o clona el repositorio.
 2. Cambia el logo en `src/api/static/logoFB.png`.
 3. Ajusta textos/nombre visual de la app en los HTML de `src/api/page/` y `src/api/usuarios.html`.
-4. Cambia `SECRET_KEY` en `src/api/app.py`.
-5. Cambia `ADMIN_EMAILS` en `src/api/routes.py`.
+4. Define `SECRET_KEY` por entorno (ver sección Configuración, no edites `app.py`).
+5. Define `ADMIN_EMAILS` por entorno (ver sección Configuración).
 6. Instala dependencias y ejecuta con `python app.py`.
 
 Recordatorio clave:

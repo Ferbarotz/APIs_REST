@@ -9,9 +9,15 @@ EXTENSIONES_PERMITIDAS = {"png", "jpg", "jpeg", "gif"}
 
 # ============================================================
 # SOLO estos emails pueden ver el listado de usuarios (admin)
-# En otro proyecto, cambia esta línea por tu propio email
+# Configurable por variable de entorno para reutilizar en otros proyectos:
+#   ADMIN_EMAILS="admin1@test.com,admin2@test.com"
+# En otro proyecto, cambia el .env o esta línea por tu propio email
 # ============================================================
-ADMIN_EMAILS = {"ferbarotz23@gmail.com"}
+ADMIN_EMAILS = {
+    e.strip().lower()
+    for e in os.environ.get("ADMIN_EMAILS", "ferbarotz23@gmail.com").split(",")
+    if e.strip()
+}
 
 
 def _extension_permitida(nombre_archivo):
@@ -56,15 +62,16 @@ def create_usuario():
     email = (body or form_data).get('email')
     password = (body or form_data).get('password')
 
-    if not nombre:
+    if not nombre or (isinstance(nombre, str) and not nombre.strip()):
         return jsonify({"error": "El campo 'nombre' es requerido"}), 400
-    if not email:
+    if not email or (isinstance(email, str) and not email.strip()):
         return jsonify({"error": "El campo 'email' es requerido"}), 400
     if not password:
         return jsonify({"error": "El campo 'password' es requerido"}), 400
 
+    email_norm = email.strip().lower() if isinstance(email, str) else email
     # Verificar que el email no exista ya
-    usuario_existente = User.query.filter_by(email=email).first()
+    usuario_existente = User.query.filter_by(email=email_norm).first()
     if usuario_existente:
         return jsonify({"error": "Ese email ya está registrado"}), 400
 
@@ -75,13 +82,16 @@ def create_usuario():
     is_active = True
     if body is not None:
         is_active = body.get('is_active', True)
+    elif 'is_active' in form_data:
+        valor = form_data.get('is_active')
+        is_active = str(valor).lower() not in ('false', '0', 'no', 'off')
 
     nuevo_usuario = User(
-        nombre=nombre,
-        email=email,
-        password=password,
+        nombre=nombre.strip(),
+        email=email.strip().lower(),
         is_active=is_active
     )
+    nuevo_usuario.set_password(password)
 
     db.session.add(nuevo_usuario)
     db.session.commit()
@@ -103,14 +113,20 @@ def create_usuario():
 # POST /api/login  →  iniciar sesión
 @api.route('/login', methods=['POST'])
 def login_usuario():
-    body = request.get_json()
+    body = request.get_json(silent=True)
 
     if body is None or 'email' not in body or 'password' not in body:
         return jsonify({"error": "Email y contraseña son requeridos"}), 400
 
-    usuario = User.query.filter_by(email=body['email']).first()
-    if not usuario or body['password'] != usuario.password:
+    email = str(body['email']).strip().lower()
+    usuario = User.query.filter_by(email=email).first()
+    if not usuario or not usuario.check_password(body['password']):
         return jsonify({"error": "Email o contraseña incorrectos"}), 401
+
+    # Migración automática: si aún estaba en texto plano, pasar a hash
+    if not usuario.password.startswith(("pbkdf2:", "scrypt:")):
+        usuario.set_password(body['password'])
+        db.session.commit()
 
     session['usuario_id'] = usuario.id
     session['usuario_nombre'] = usuario.nombre
@@ -131,19 +147,20 @@ def actualizar_usuario(id):
     if not usuario:
         return jsonify({"error": "Usuario no encontrado"}), 404
 
-    body = request.get_json()
+    body = request.get_json(silent=True)
     if body is None:
         return jsonify({"error": "El cuerpo de la solicitud no puede estar vacío"}), 400
 
     if 'nombre' in body:
-        usuario.nombre = body['nombre']
+        usuario.nombre = body['nombre'].strip() if isinstance(body['nombre'], str) else body['nombre']
     if 'email' in body:
-        existe = User.query.filter(User.email == body['email'], User.id != id).first()
+        nuevo_email = body['email'].strip().lower() if isinstance(body['email'], str) else body['email']
+        existe = User.query.filter(User.email == nuevo_email, User.id != id).first()
         if existe:
             return jsonify({"error": "Ese email ya está registrado"}), 400
-        usuario.email = body['email']
+        usuario.email = nuevo_email
     if 'password' in body:
-        usuario.password = body['password']
+        usuario.set_password(body['password'])
     if 'is_active' in body:
         usuario.is_active = body['is_active']
 

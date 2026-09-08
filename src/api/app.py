@@ -3,19 +3,22 @@ from flask import Flask, send_file, send_from_directory, redirect, session
 from models import db, User
 from routes import api, ADMIN_EMAILS
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(__name__, static_folder="static")
 
 # --- Configuración de la base de datos (SQLite) ---
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///usuarios.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # --- Configuración de subida de archivos ---
-app.config["UPLOAD_FOLDER"] = "uploads"
+app.config["UPLOAD_FOLDER"] = os.path.join(BASE_DIR, "uploads")
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # Máximo: 5 MB
-# Clave para firmar las sesiones
-app.config["SECRET_KEY"] = "clave-secreta-de-practica-apifernando"
+# Clave para firmar las sesiones (cámbiala en producción con SECRET_KEY)
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "clave-secreta-de-practica-apifernando")
 
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, "instance"), exist_ok=True)
 
 EXTENSIONES_PERMITIDAS = {"png", "jpg", "jpeg", "gif"}
 
